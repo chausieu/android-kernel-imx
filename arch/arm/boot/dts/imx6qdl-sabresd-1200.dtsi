@@ -109,20 +109,6 @@
 			startup-delay-us = <500>;
 			enable-active-high;
 		};
-		wlreg_on: fixedregulator@100 {
-			compatible = "regulator-fixed";
-			regulator-min-microvolt = <5000000>;
-			regulator-max-microvolt = <5000000>;
-			regulator-name = "wlreg_on";
-			gpio = <&gpio4 7 0>;
-			startup-delay-us = <100>;
-			enable-active-high;
-		};
-
-		bcmdhd_wlan_1: bcmdhd_wlan@0 {
-			compatible = "android,bcmdhd_wlan";
-			wlreg_on-supply = <&wlreg_on>;
-		};
 	};
 
 	gpio-keys {
@@ -307,12 +293,6 @@
 	minipcie_ctrl {
 		power-on-gpio = <&gpio3 19 0>;
 	};
-
-    bt_rfkill {
-                compatible = "fsl,mxc_bt_rfkill";
-                        bt-power-gpios = <&gpio1 2 0>;
-                                status ="okay";
-    };
 
 	ramoops_device {
 		compatible = "fsl,mxc_ramoops";
@@ -1041,7 +1021,7 @@
 	status = "okay";
 };
 
-&usdhc2 {
+/*&usdhc2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_usdhc2>;
 	bus-width = <4>;
@@ -1053,7 +1033,7 @@
 	keep-power-in-suspend;
 	enable-sdio-wakeup;
 	status = "okay";
-};
+};*/
 
 &usdhc3 {
 	pinctrl-names = "default";
