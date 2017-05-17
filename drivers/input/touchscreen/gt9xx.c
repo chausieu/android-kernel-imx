@@ -397,7 +397,7 @@ static void gtp_touch_down(struct goodix_ts_data* ts,s32 id,s32 x,s32 y,s32 w)
     input_mt_sync(ts->input_dev);
 #endif
 
-    printk("ID:%d, X:%d, Y:%d, W:%d \n", id, 1280 -x, 800 -y, w);
+    //printk("ID:%d, X:%d, Y:%d, W:%d \n", id, 1280 -x, 800 -y, w);
 }
 
 /*******************************************************
