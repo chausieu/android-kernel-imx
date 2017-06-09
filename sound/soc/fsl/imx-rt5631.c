@@ -256,7 +256,6 @@ static int imx_hifi_hw_params(struct snd_pcm_substream *substream,
 		dev_err(dev, "failed to set SYSCLK: %d\n", ret);
 		return ret;
 	}
-	printk("------------pll_out------%d \n",pll_out);
 	//+++
 #ifdef USE_RT5631
 	rt5631_reg_set(1);
@@ -375,7 +374,7 @@ static int imx_hifi_hw_free(struct snd_pcm_substream *substream)
 		ret = snd_soc_dai_set_sysclk(codec_dai, 0,//WM8962_SYSCLK_MCLK,
 				0, SND_SOC_CLOCK_IN);
 		if (ret < 0) {
-			dev_err(dev, "failed to switch away from FLL: %d\n", ret);
+			//dev_err(dev, "failed to switch away from FLL: %d\n", ret);
 			return ret;
 		}
 
@@ -400,7 +399,6 @@ static int imx_rt5631_gpio_init(struct snd_soc_pcm_runtime *rtd)
 {
 	struct snd_soc_codec *codec = rtd->codec;
 	struct imx_priv *priv = &card_priv;
-	printk("%s<<<hp_gpio:%d mic_gpio:%d\n", __func__, priv->hp_gpio, priv->mic_gpio);
 
 	priv->codec = codec;
 

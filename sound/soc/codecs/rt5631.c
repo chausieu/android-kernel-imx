@@ -543,7 +543,6 @@ static int check_vdac_pll1(struct snd_soc_dapm_widget *source,
 			 struct snd_soc_dapm_widget *sink)
 {
 	unsigned int reg = snd_soc_read(source->codec, RT5631_GLOBAL_CLK_CTRL);
-	printk("MQ--%s<<<<<\n", __func__);
 
 	if (reg & RT5631_VDAC_CLK_SOUR_SCLK2)
 		return 0;
@@ -555,7 +554,6 @@ static int check_vdac_pll2(struct snd_soc_dapm_widget *source,
 			 struct snd_soc_dapm_widget *sink)
 {
 	unsigned int reg = snd_soc_read(source->codec, RT5631_GLOBAL_CLK_CTRL);
-	printk("MQ--%s<<<<<\n", __func__);
 
 	if (reg & RT5631_VDAC_CLK_SOUR_SCLK2)
 		return (reg & RT5631_SYSCLK2_SOUR_SEL_PLL2);
@@ -566,7 +564,6 @@ static int check_vdac_pll2(struct snd_soc_dapm_widget *source,
 static int check_dac_power(struct snd_soc_dapm_widget *source,
 			 struct snd_soc_dapm_widget *sink)
 {
-	printk("MQ--%s<<<<<\n", __func__);
 
 	return 0;
 }
@@ -1702,7 +1699,7 @@ struct coeff_clk_div coeff_div_voice[] = {
 void rt5631_reg_set(int if_play) 
 {
 //#ifdef RT5631_DEBUG
-	printk("MQ===%s===if_play:%d REG-02:%x\n", __FUNCTION__, if_play, snd_soc_read(pcodec, RT5631_SPK_OUT_VOL));
+//	printk("MQ===%s===if_play:%d REG-02:%x\n", __FUNCTION__, if_play, snd_soc_read(pcodec, RT5631_SPK_OUT_VOL));
 //#endif
 	if (if_play) {	
 		rt5631_index_write(pcodec, RT5631_EQ_BW_HIP, 0x1bbc);
