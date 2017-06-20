@@ -778,7 +778,7 @@
 &gpc {
 	/* use ldo-bypass, u-boot will check it and configure */
 	fsl,ldo-bypass = <1>;
-	fsl,wdog-reset = <2>;
+	fsl,wdog-reset = <1>;
 };
 
 &hdmi_audio {
