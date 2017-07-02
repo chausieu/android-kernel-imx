@@ -100,7 +100,7 @@ static int hpjack_status_check(void)
 		return 0;
 
 	hp_status = gpio_get_value(priv->hp_gpio) ? 1 : 0;
-	printk("%s<<<hp_status:%d \n", __func__, hp_status);
+	//printk("%s<<<hp_status:%d \n", __func__, hp_status);
 
 	buf = kmalloc(32, GFP_ATOMIC);
 	if (!buf) {

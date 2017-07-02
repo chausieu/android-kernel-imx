@@ -856,7 +856,7 @@ static int hp_event(struct snd_soc_dapm_widget *w,
 	unsigned int reg_02;
 	reg_02 = snd_soc_read(codec, 0x02);
 	snd_soc_write(codec, 0x02, 0xc8c8);
-	printk("%s<<<<<<<REG-02:%x\n",__func__, reg_02);
+	//printk("%s<<<<<<<REG-02:%x\n",__func__, reg_02);
 
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMD:
@@ -1754,17 +1754,17 @@ static int rt5631_hifi_pcm_params(struct snd_pcm_substream *substream,
 
 	if (RT5631_AIF1 == dai->id) {
 		sysclk = rt5631->sysclk[RT5631_SCLK1];
-		printk("33333  rt5631_hifi_pcm_params1: %d, %d, %d, %d \n", dai->id, sysclk);
+		//printk("33333  rt5631_hifi_pcm_params1: %d, %d, %d, %d \n", dai->id, sysclk);
 	} else if (RT5631_AIF2 == dai->id) {
 		snd_soc_update_bits(codec, RT5631_GLOBAL_CLK_CTRL,
 			RT5631_ADCR_FUN_MASK, RT5631_ADCR_FUN_VADC);
 		val = snd_soc_read(codec, RT5631_GLOBAL_CLK_CTRL);
 		if (val & RT5631_VDAC_CLK_SOUR_SCLK2){
 			sysclk = rt5631->sysclk[RT5631_SCLK2];
-			printk("111111  rt5631_hifi_pcm_params1: %d, %d, %d, %d \n", dai->id, sysclk);
+			//printk("111111  rt5631_hifi_pcm_params1: %d, %d, %d, %d \n", dai->id, sysclk);
 		} else {
 			sysclk = rt5631->sysclk[RT5631_SCLK1];
-		        printk("222222 rt5631_hifi_pcm_params1: %d, %d, %d, %d \n", dai->id, sysclk);
+		        //printk("222222 rt5631_hifi_pcm_params1: %d, %d, %d, %d \n", dai->id, sysclk);
 		}
 	}
 
@@ -1779,7 +1779,7 @@ static int rt5631_hifi_pcm_params(struct snd_pcm_substream *substream,
 
 	if (rt5631->master[dai->id])
 	{
-		printk("rt5631_hifi_pcm_params1: %d, %d, %d, %d \n", dai->id, sysclk, rt5631->rate, rt5631->bclk_rate / rt5631->rate);
+		//printk("rt5631_hifi_pcm_params1: %d, %d, %d, %d \n", dai->id, sysclk, rt5631->rate, rt5631->bclk_rate / rt5631->rate);
 		coeff = get_coeff(dai->id, sysclk, rt5631->rate,
 			rt5631->bclk_rate / rt5631->rate);		
 	}	
