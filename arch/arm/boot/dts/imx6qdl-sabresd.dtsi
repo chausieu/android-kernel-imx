@@ -332,6 +332,11 @@
 		reg = <0x50>;
 	};
 
+	mega48@60 {
+                compatible = "fsl,mega48-i2c";
+                reg = <0x60>;
+        };
+
 	pmic: pfuze100@08 {
 		compatible = "fsl,pfuze100";
 		reg = <0x08>;
