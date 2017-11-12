@@ -1274,7 +1274,7 @@ err:
 
 	return err;
 }
-
+#if 0
 int sdio_reset_comm(struct mmc_card *card)
 {
 	struct mmc_host *host = card->host;
@@ -1312,3 +1312,4 @@ err:
 	return err;
 }
 EXPORT_SYMBOL(sdio_reset_comm);
+#endif
