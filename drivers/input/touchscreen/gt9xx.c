@@ -25,7 +25,10 @@
     #include <linux/input/mt.h>
 #endif
 
-static const char *goodix_ts_name = "gt9xx";
+//add ben
+#define GTP_CONFIG_OF	1
+
+static const char *goodix_ts_name = "goodix-ts";
 static const char *goodix_input_phys = "input/ts";
 static struct workqueue_struct *goodix_wq;
 struct i2c_client * i2c_connect_client = NULL; 
@@ -387,17 +390,17 @@ static void gtp_touch_down(struct goodix_ts_data* ts,s32 id,s32 x,s32 y,s32 w)
     input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
     input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, w);
     input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, w);
-#else    
-
-    input_report_abs(ts->input_dev, ABS_X, 1280 -x);
-    input_report_abs(ts->input_dev, ABS_Y, 800 - y);
+#else
     input_report_key(ts->input_dev, BTN_TOUCH, 1);
+    input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
+    input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
+    input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, w);
+    input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, w);
     input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, id);
-    input_report_abs(ts->input_dev, ABS_PRESSURE, 1);
     input_mt_sync(ts->input_dev);
 #endif
 
-    //printk("ID:%d, X:%d, Y:%d, W:%d \n", id, 1280 -x, 800 -y, w);
+    GTP_DEBUG("ID:%d, X:%d, Y:%d, W:%d", id, x, y, w);
 }
 
 /*******************************************************
@@ -416,9 +419,6 @@ static void gtp_touch_up(struct goodix_ts_data* ts, s32 id)
     GTP_DEBUG("Touch id[%2d] release!", id);
 #else
     input_report_key(ts->input_dev, BTN_TOUCH, 0);
-    input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, id);
-    input_report_abs(ts->input_dev, ABS_PRESSURE, 0);
-    input_mt_sync(ts->input_dev);
 #endif
 }
 
@@ -487,12 +487,13 @@ static void gtp_pen_down(s32 x, s32 y, s32 w, s32 id)
     input_report_abs(ts->pen_dev, ABS_MT_POSITION_Y, y);
     input_report_abs(ts->pen_dev, ABS_MT_PRESSURE, w);
     input_report_abs(ts->pen_dev, ABS_MT_TOUCH_MAJOR, w);
-#else    
-    input_report_abs(ts->pen_dev, ABS_X, x);
-    input_report_abs(ts->pen_dev, ABS_Y, y);
+#else
     input_report_key(ts->pen_dev, BTN_TOUCH, 1);
+    input_report_abs(ts->pen_dev, ABS_MT_POSITION_X, x);
+    input_report_abs(ts->pen_dev, ABS_MT_POSITION_Y, y);
+    input_report_abs(ts->pen_dev, ABS_MT_PRESSURE, w);
+    input_report_abs(ts->pen_dev, ABS_MT_TOUCH_MAJOR, w);
     input_report_abs(ts->pen_dev, ABS_MT_TRACKING_ID, id);
-    input_report_abs(ts->pen_dev, ABS_PRESSURE, 1);
     input_mt_sync(ts->pen_dev);
 #endif
     GTP_DEBUG("(%d)(%d, %d)[%d]", id, x, y, w);
@@ -508,10 +509,8 @@ static void gtp_pen_up(s32 id)
     input_mt_slot(ts->pen_dev, id);
     input_report_abs(ts->pen_dev, ABS_MT_TRACKING_ID, -1);
 #else
+    
     input_report_key(ts->pen_dev, BTN_TOUCH, 0);
-    input_report_abs(ts->pen_dev, ABS_MT_TRACKING_ID, id);
-    input_report_abs(ts->pen_dev, ABS_PRESSURE, 0);
-    input_mt_sync(ts->pen_dev);  
 #endif
 
 }
@@ -651,7 +650,7 @@ static void goodix_ts_work_func(struct work_struct *work)
     finger = point_data[GTP_ADDR_LENGTH];
 
 #if GTP_COMPATIBLE_MODE
-    // GT9XXF
+    // GT9XXF reques event 
     if ((finger == 0x00) && (CHIP_TYPE_GT9F == ts->chip_type))     // request arrived
     {
         ret = gtp_i2c_read(ts->client, rqst_buf, 3);
@@ -905,7 +904,7 @@ static void goodix_ts_work_func(struct work_struct *work)
 
     if (touch_num)
     {
-        for (i = 0; i < GTP_MAX_TOUCH; i++)
+        for (i = 0; i < touch_num; i++)
         {
             coor_data = &point_data[i * 8 + 3];
 
@@ -1733,6 +1732,21 @@ static s8 gtp_request_io_port(struct goodix_ts_data *ts)
 
 /*******************************************************
 Function:
+    Request gpio(INT & RST) ports.
+Input:
+    ts: private data.
+Output:
+    Executive outcomes.
+        >= 0: succeed, < 0: failed
+*******************************************************/
+static s8 gtp_free_io_port(void)
+{
+    GTP_GPIO_FREE(gtp_rst_gpio);
+    GTP_GPIO_FREE(gtp_int_gpio);
+}
+
+/*******************************************************
+Function:
     Request interrupt.
 Input:
     ts: private data.
@@ -1820,9 +1834,10 @@ static s8 gtp_request_input_dev(struct goodix_ts_data *ts)
     GTP_SWAP(ts->abs_x_max, ts->abs_y_max);
 #endif
 
-    input_set_abs_params(ts->input_dev, ABS_X, 0, ts->abs_x_max, 0, 0);
-    input_set_abs_params(ts->input_dev, ABS_Y, 0, ts->abs_y_max, 0, 0);
-    input_set_abs_params(ts->input_dev, ABS_PRESSURE, 0, 1, 0, 0);  //ferdi
+    input_set_abs_params(ts->input_dev, ABS_MT_POSITION_X, 0, ts->abs_x_max, 0, 0);
+    input_set_abs_params(ts->input_dev, ABS_MT_POSITION_Y, 0, ts->abs_y_max, 0, 0);
+    input_set_abs_params(ts->input_dev, ABS_MT_WIDTH_MAJOR, 0, 255, 0, 0);
+    input_set_abs_params(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
     input_set_abs_params(ts->input_dev, ABS_MT_TRACKING_ID, 0, 255, 0, 0);
 
     ts->input_dev->name = goodix_ts_name;
@@ -2296,7 +2311,6 @@ static void gtp_parse_dt(struct device *dev)
 
 	gtp_int_gpio = of_get_named_gpio(np, "goodix,irq-gpio", 0);
 	gtp_rst_gpio = of_get_named_gpio(np, "goodix,rst-gpio", 0);
-	GTP_ERROR("gtp_parse_dt:gtp_int_gpio  %d,  gtp_rst_gpio %d\n", gtp_int_gpio, gtp_rst_gpio);
 		
 }
 
@@ -2314,7 +2328,7 @@ int gtp_parse_dt_cfg(struct device *dev, u8 *cfg, int *cfg_len, u8 sid)
 	struct property *prop;
 	char cfg_name[18];
 
-	snprintf(cfg_name, sizeof(cfg_name), "goodix,cfg-group0");
+	snprintf(cfg_name, sizeof(cfg_name), "goodix,cfg-group%d", sid);
 	prop = of_find_property(np, cfg_name, cfg_len);
 	if (!prop || !prop->value || *cfg_len == 0 || *cfg_len > GTP_CONFIG_MAX_LENGTH) {
 		return -1;/* failed */
@@ -2394,7 +2408,6 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
     
     //do NOT remove these logs
     GTP_INFO("GTP Driver Version: %s", GTP_DRIVER_VERSION);
-    //GTP_INFO("GTP Driver Built@%s, %s", __TIME__, __DATE__);
     GTP_INFO("GTP I2C Address: 0x%02x", client->addr);
 
     i2c_connect_client = client;
@@ -2415,11 +2428,11 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
     if (client->dev.of_node) {
 		gtp_parse_dt(&client->dev);
     }
-    ret = gtp_power_switch(client, 1);
-	if (ret) {
-		GTP_ERROR("GTP power on failed.");
-		return -EINVAL;
-	}
+    	//ret = gtp_power_switch(client, 1);
+	//if (ret) {
+	//	GTP_ERROR("GTP power on failed.");
+	//	return -EINVAL;
+	//}
 #else			/* use gpio defined in gt9xx.h */
 	gtp_rst_gpio = GTP_RST_PORT;
 	gtp_int_gpio = GTP_INT_PORT;
@@ -2461,6 +2474,8 @@ static int goodix_ts_probe(struct i2c_client *client, const struct i2c_device_id
     if (ret < 0)
     {
         GTP_ERROR("I2C communication ERROR!");
+		gtp_free_io_port();
+		return 0;
     }
 
     ret = gtp_read_version(client, &version_info);
@@ -2545,6 +2560,7 @@ Output:
 *******************************************************/
 static int goodix_ts_remove(struct i2c_client *client)
 {
+#if 0
     struct goodix_ts_data *ts = i2c_get_clientdata(client);
     
     GTP_DEBUG_FUNC();
@@ -2578,6 +2594,7 @@ static int goodix_ts_remove(struct i2c_client *client)
     input_unregister_device(ts->input_dev);
     kfree(ts);
 
+#endif
     return 0;
 }
 
@@ -3040,10 +3057,12 @@ static const struct of_device_id goodix_match_table[] = {
 };
 #endif
 
-static const struct i2c_device_id goodix_ts_id[] = {
-    { GTP_I2C_NAME, 0 },
-    { }
+static struct i2c_device_id goodix_ts_id[] = {
+    {GTP_I2C_NAME, 0},
+    { }		
 };
+MODULE_DEVICE_TABLE(i2c,goodix_ts_id);
+
 
 static struct i2c_driver goodix_ts_driver = {
     .probe      = goodix_ts_probe,
@@ -3055,8 +3074,10 @@ static struct i2c_driver goodix_ts_driver = {
 #ifdef GTP_CONFIG_OF
         .of_match_table = goodix_match_table,
 #endif
+#if 0
 #if !defined(CONFIG_FB) && defined(CONFIG_PM)
 		.pm		  = &gtp_pm_ops,
+#endif
 #endif
     },
 };
@@ -3069,7 +3090,7 @@ Input:
 Output:
     Executive Outcomes. 0---succeed.
 ********************************************************/
-static int goodix_ts_init(void)
+static int __init goodix_ts_init(void)
 {
     s32 ret;
 
