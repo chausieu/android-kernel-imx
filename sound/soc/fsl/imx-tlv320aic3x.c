@@ -1,92 +1,72 @@
 /*
- * Copyright 2014 Dmitry Lavnikevich,
- * SaM Solutions <d.lavnikevich at sam-solutions.com>
+ * 2014 Variscite, Ltd. All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
+ * Copyright (C) 2014 Freescale Semiconductor, Inc.
+ *
+ * 2012 Variscite, Ltd. All Rights Reserved.
+ * Based on imx-wm8962.c
+ * Copyright (C) 2012 Freescale Semiconductor, Inc.
+ * Copyright (C) 2012 Linaro Ltd.
+ *
+ * The code contained herein is licensed under the GNU General Public
+ * License. You may obtain a copy of the GNU General Public License
+ * Version 2 or later at the following locations:
+ *
+ * http://www.opensource.org/licenses/gpl-license.html
+ * http://www.gnu.org/copyleft/gpl.html
  */
 
 #include <linux/module.h>
-#include <linux/i2c.h>
 #include <linux/of.h>
 #include <linux/of_platform.h>
+#include <linux/i2c.h>
+#include <linux/clk.h>
+#include <sound/soc.h>
 
 #include "../codecs/tlv320aic3x.h"
 #include "imx-audmux.h"
-#include "imx-ssi.h"
 
-#define CODEC_CLOCK 24000000
+#define DAI_NAME_SIZE	32
 
-
-/* machine dapm widgets */
-static const struct snd_soc_dapm_widget aic3x_dapm_widgets[] = {
-	SND_SOC_DAPM_LINE("Line Out", NULL),
-	SND_SOC_DAPM_LINE("Speaker", NULL),
-	SND_SOC_DAPM_HP("Headphone Jack", NULL),
-	SND_SOC_DAPM_MIC("Mic Jack", NULL),
-	SND_SOC_DAPM_LINE("Line In", NULL),
+struct imx_tlv320aic3x_data {
+	struct snd_soc_dai_link dai;
+	struct snd_soc_card card;
+	char codec_dai_name[DAI_NAME_SIZE];
+	char platform_name[DAI_NAME_SIZE];
+	struct clk *codec_clk;
+	unsigned int clk_frequency;
 };
 
-static int imx_audmux_config(int int_port, int ext_port)
+static int imx_tlv320aic3x_dai_init(struct snd_soc_pcm_runtime *rtd)
 {
-	unsigned int ptcr, pdcr;
-
-	int_port--;
-	ext_port--;
-	ptcr = IMX_AUDMUX_V2_PTCR_TFSDIR |
-		IMX_AUDMUX_V2_PTCR_TFSEL(ext_port) |
-		IMX_AUDMUX_V2_PTCR_TCLKDIR |
-		IMX_AUDMUX_V2_PTCR_TCSEL(ext_port);
-	pdcr = IMX_AUDMUX_V2_PDCR_RXDSEL(ext_port);
-	imx_audmux_v2_configure_port(int_port, ptcr, pdcr);
-
-	ptcr = 0;
-	pdcr = IMX_AUDMUX_V2_PDCR_RXDSEL(int_port);
-	imx_audmux_v2_configure_port(ext_port, ptcr, pdcr);
-
-	return 0;
-}
-
-/* Logic for a aic3x as connected on a imx */
-static int imx_aic3x_init(struct snd_soc_pcm_runtime *rtd)
-{
+	struct imx_tlv320aic3x_data *data = container_of(rtd->card,
+					struct imx_tlv320aic3x_data, card);
+	struct device *dev = rtd->card->dev;
 	int ret;
 
-	ret = snd_soc_dai_set_sysclk(rtd->codec_dai, 0, CODEC_CLOCK,
-		SND_SOC_CLOCK_IN);
-	if (ret < 0)
+	ret = snd_soc_dai_set_sysclk(rtd->codec_dai, 0,
+				     data->clk_frequency, SND_SOC_CLOCK_IN);
+	if (ret) {
+		dev_err(dev, "could not set codec driver clock params\n");
 		return ret;
+	}
 
 	return 0;
 }
 
-static struct snd_soc_dai_link imx_tlv320_dai = {
-	.name = "HiFi",
-	.stream_name = "HiFi",
-	.codec_dai_name = "tlv320aic3x-hifi",
-	.init = &imx_aic3x_init,
-	.dai_fmt = SND_SOC_DAIFMT_I2S |
-		SND_SOC_DAIFMT_NB_NF |
-		SND_SOC_DAIFMT_CBM_CFM,
+static const struct snd_soc_dapm_widget imx_tlv320aic3x_dapm_widgets[] = {
+	SND_SOC_DAPM_MIC("Mic Jack", NULL),
+	SND_SOC_DAPM_LINE("Line In Jack", NULL),
+	SND_SOC_DAPM_HP("Headphone Jack", NULL),
+	SND_SOC_DAPM_SPK("Line Out Jack", NULL),
+	SND_SOC_DAPM_SPK("Ext Spk", NULL),
 };
 
-static struct snd_soc_card imx_tlv320_card = {
-	.num_links = 1,
-	.owner = THIS_MODULE,
-	.dai_link = &imx_tlv320_dai,
-	.dapm_widgets = aic3x_dapm_widgets,
-	.num_dapm_widgets = ARRAY_SIZE(aic3x_dapm_widgets),
-};
-
-static int imx_tlv320_probe(struct platform_device *pdev)
+static int imx_tlv320aic3x_audmux_config(struct platform_device *pdev)
 {
 	struct device_node *np = pdev->dev.of_node;
-	struct device_node *ssi_np, *codec_np;
-	struct platform_device *ssi_pdev;
-	struct i2c_client *codec_dev;
 	int int_port, ext_port;
-	int ret = 0;
+	int ret;
 
 	ret = of_property_read_u32(np, "mux-int-port", &int_port);
 	if (ret) {
@@ -99,79 +79,162 @@ static int imx_tlv320_probe(struct platform_device *pdev)
 		return ret;
 	}
 
-	imx_audmux_config(int_port, ext_port);
+	/*
+	 * The port numbering in the hardware manual starts at 1, while
+	 * the audmux API expects it starts at 0.
+	 */
+	int_port--;
+	ext_port--;
+	ret = imx_audmux_v2_configure_port(int_port,
+			IMX_AUDMUX_V2_PTCR_SYN |
+			IMX_AUDMUX_V2_PTCR_TFSEL(ext_port) |
+			IMX_AUDMUX_V2_PTCR_TCSEL(ext_port) |
+			IMX_AUDMUX_V2_PTCR_TFSDIR |
+			IMX_AUDMUX_V2_PTCR_TCLKDIR,
+			IMX_AUDMUX_V2_PDCR_RXDSEL(ext_port));
+	if (ret) {
+		dev_err(&pdev->dev, "audmux internal port setup failed\n");
+		return ret;
+	}
+	ret = imx_audmux_v2_configure_port(ext_port,
+			IMX_AUDMUX_V2_PTCR_SYN,
+			IMX_AUDMUX_V2_PDCR_RXDSEL(int_port));
+	if (ret) {
+		dev_err(&pdev->dev, "audmux external port setup failed\n");
+		return ret;
+	}
 
-	ssi_np = of_parse_phandle(pdev->dev.of_node, "ssi-controller", 0);
+	return 0;
+}
+
+static int imx_tlv320aic3x_probe(struct platform_device *pdev)
+{
+	struct device_node *cpu_np, *codec_np;
+	struct platform_device *cpu_pdev;
+	struct i2c_client *codec_dev;
+	struct imx_tlv320aic3x_data *data;
+	int ret;
+
+	cpu_np = of_parse_phandle(pdev->dev.of_node, "cpu-dai", 0);
 	codec_np = of_parse_phandle(pdev->dev.of_node, "audio-codec", 0);
-	if (!ssi_np || !codec_np) {
+	if (!cpu_np || !codec_np) {
 		dev_err(&pdev->dev, "phandle missing or invalid\n");
 		ret = -EINVAL;
 		goto fail;
 	}
 
-	ssi_pdev = of_find_device_by_node(ssi_np);
-	if (!ssi_pdev) {
+	if (strstr(cpu_np->name, "ssi")) {
+		ret = imx_tlv320aic3x_audmux_config(pdev);
+		if (ret)
+			goto fail;
+	}
+
+	cpu_pdev = of_find_device_by_node(cpu_np);
+	if (!cpu_pdev) {
 		dev_err(&pdev->dev, "failed to find SSI platform device\n");
-		ret = -EPROBE_DEFER;
+		ret = -EINVAL;
 		goto fail;
 	}
 	codec_dev = of_find_i2c_device_by_node(codec_np);
 	if (!codec_dev) {
 		dev_err(&pdev->dev, "failed to find codec platform device\n");
-		return -EPROBE_DEFER;
+		return -EINVAL;
 	}
 
-	imx_tlv320_dai.codec_of_node = codec_np;
-	imx_tlv320_dai.cpu_of_node = ssi_np;
-	imx_tlv320_dai.platform_of_node = ssi_np;
-
-	imx_tlv320_card.dev = &pdev->dev;
-	ret = snd_soc_of_parse_card_name(&imx_tlv320_card, "model");
-	if (ret)
+	data = devm_kzalloc(&pdev->dev, sizeof(*data), GFP_KERNEL);
+	if (!data) {
+		ret = -ENOMEM;
 		goto fail;
-	ret = snd_soc_of_parse_audio_routing(&imx_tlv320_card, "audio-routing");
+	}
+
+	data->codec_clk = clk_get(&codec_dev->dev, NULL);
+	if (IS_ERR(data->codec_clk)) {
+		/* assuming clock enabled by default */
+		data->codec_clk = NULL;
+		ret = of_property_read_u32(codec_np, "clock-frequency",
+					&data->clk_frequency);
+		if (ret) {
+			dev_err(&codec_dev->dev,
+				"clock-frequency missing or invalid\n");
+			goto fail;
+		}
+	} else {
+		data->clk_frequency = clk_get_rate(data->codec_clk);
+		clk_prepare_enable(data->codec_clk);
+	}
+
+	data->dai.name = "HiFi";
+	data->dai.stream_name = "HiFi";
+	data->dai.codec_dai_name = "tlv320aic3x-hifi";
+	data->dai.codec_of_node = codec_np;
+	data->dai.cpu_of_node = cpu_np;
+	data->dai.platform_of_node = cpu_np;
+	data->dai.init = &imx_tlv320aic3x_dai_init;
+	data->dai.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
+			    SND_SOC_DAIFMT_CBM_CFM;
+
+	data->card.dev = &pdev->dev;
+	ret = snd_soc_of_parse_card_name(&data->card, "model");
 	if (ret)
-		goto fail;
+		goto clk_fail;
+	ret = snd_soc_of_parse_audio_routing(&data->card, "audio-routing");
+	if (ret)
+		goto clk_fail;
+	data->card.num_links = 1;
+	data->card.owner = THIS_MODULE;
+	data->card.dai_link = &data->dai;
+	data->card.dapm_widgets = imx_tlv320aic3x_dapm_widgets;
+	data->card.num_dapm_widgets = ARRAY_SIZE(imx_tlv320aic3x_dapm_widgets);
 
-	platform_set_drvdata(pdev, &imx_tlv320_card);
-
-	ret = devm_snd_soc_register_card(&pdev->dev, &imx_tlv320_card);
+	ret = snd_soc_register_card(&data->card);
 	if (ret) {
 		dev_err(&pdev->dev, "snd_soc_register_card failed (%d)\n", ret);
-		goto fail;
+		goto clk_fail;
 	}
 
-	of_node_put(ssi_np);
-	of_node_put(codec_np);
-
-	return 0;
-
+	platform_set_drvdata(pdev, data);
+clk_fail:
+	clk_put(data->codec_clk);
 fail:
-	if (ssi_np)
-		of_node_put(ssi_np);
+	if (cpu_np)
+		of_node_put(cpu_np);
 	if (codec_np)
 		of_node_put(codec_np);
 
 	return ret;
 }
 
-static const struct of_device_id imx_tlv320_dt_ids[] = {
-	{ .compatible = "fsl,tlv320-audio", },
+static int imx_tlv320aic3x_remove(struct platform_device *pdev)
+{
+	struct imx_tlv320aic3x_data *data = platform_get_drvdata(pdev);
+
+	if (data->codec_clk) {
+		clk_disable_unprepare(data->codec_clk);
+		clk_put(data->codec_clk);
+	}
+	snd_soc_unregister_card(&data->card);
+
+	return 0;
+}
+
+static const struct of_device_id imx_tlv320aic3x_dt_ids[] = {
+	{ .compatible = "fsl,imx-audio-tlv320aic3x", },
 	{ /* sentinel */ }
 };
-MODULE_DEVICE_TABLE(of, imx_tlv320_dt_ids);
+MODULE_DEVICE_TABLE(of, imx_tlv320aic3x_dt_ids);
 
-static struct platform_driver imx_tlv320_driver = {
+static struct platform_driver imx_tlv320aic3x_driver = {
 	.driver = {
-		.name = "tlv320aic3x",
+		.name = "imx-tlv320aic3x",
 		.owner = THIS_MODULE,
-		.pm = &snd_soc_pm_ops,
-		.of_match_table = imx_tlv320_dt_ids,
+		.of_match_table = imx_tlv320aic3x_dt_ids,
 	},
-	.probe = imx_tlv320_probe,
+	.probe = imx_tlv320aic3x_probe,
+	.remove = imx_tlv320aic3x_remove,
 };
-module_platform_driver(imx_tlv320_driver);
+module_platform_driver(imx_tlv320aic3x_driver);
 
-MODULE_AUTHOR("Lavnikevich Dmitry");
-MODULE_DESCRIPTION("TLV320AIC3X i.MX6 ASoC driver");
-MODULE_LICENSE("GPL");
+MODULE_AUTHOR("ron.d@variscite.com. Variscite Ltd.");
+MODULE_DESCRIPTION("Variscite i.MX TLV320aic3x ASoC machine driver");
+MODULE_LICENSE("GPL v2");
+MODULE_ALIAS("platform:imx-tlv320aic3x");

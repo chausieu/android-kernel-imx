@@ -162,111 +162,17 @@
 		};			
 	};
 
-	#if 0
-	gpio-keys {
-		compatible = "gpio-keys";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_gpio_keys>;
-
-		power {
-			label = "Power Button";
-			gpios = <&gpio3 29 1>;
-			gpio-key,wakeup;
-			linux,code = <KEY_POWER>;
-		};
-
-		volume-up {
-			label = "Volume Up";
-			gpios = <&gpio1 4 1>;
-			gpio-key,wakeup;
-			linux,code = <KEY_VOLUMEUP>;
-		};
-	};
-	#endif
-
-	#if 0	
-	sound {
-		compatible = "fsl,imx-audio-rt5631";
-		model = "imx6dl-rt5631";
-		ssi-controller = <&ssi1>;
-		audio-codec = <&codec>;
-		audio-routing =
-			"Headphone Jack", "HPOL",
-			"Headphone Jack", "HPOR",
-			"Ext Spk", "SPOL",
-			"Ext Spk", "SPOR";
-			//"MICBIAS", "AMIC",
-			//"IN3R", "MICBIAS",
-			//"DMIC", "MICBIAS",
-			//"DMICDAT", "DMIC";
-		mux-int-port = <1>;
-		mux-ext-port = <4>;
-		//hp-det-gpios = <&gpio7 8 1>;
-		/*+++wwj begin 20150317@add mic detect*/
-		#ifdef CONFIG_MIC_DEC
-	              mic-det-gpios = <&gpio7 11 1>;
-		#endif
-		/*+++wwj end 20150317@add mic detect*/
-	};
-	#endif
-	
-	#if 0
 	sound {
 		compatible = "fsl,imx6q-var-som-tlv320aic3x", "fsl,imx-audio-tlv320aic3x";
 		model = "tlv320aic3x-audio";
-		ssi-controller = <&ssi1>;
+                cpu-dai = <&ssi1>;
 		audio-codec = <&codec>;
 		audio-routing =
 			/* Headphone connected to HPLOUT, HPROUT */
 			"Headphone Jack",       "HPLOUT",
 			"Headphone Jack",       "HPROUT",
-			/* Line Out connected to LLOUT, RLOUT */
-			"Line Out",      	"LLOUT",
-			"Line Out",     	"RLOUT",
-			/* Mic connected to (MIC3L | MIC3R) */
-			"Mic Bias",		"MIC3L",
-			"Mic Bias",		"MIC3R",
-			"Mic Jack",		"Mic Bias",
-			/* Line In connected to (LINE1L | LINE2L), (LINE1R | LINE2R) */
-			"Line In",		"LINE1L",
-			"Line In",		"LINE2L",
-			"Line In",		"LINE1R",
-			"Line In",		"LINE2R";
-		mux-int-port = <1>;
-		mux-ext-port = <4>;
-	};
-	#endif
-	
-	//test ok
-	sound {
-		compatible = "fsl,tlv320-audio";
-		model = "tlv320-audio";
-		ssi-controller = <&ssi1>;
-		audio-codec = <&codec>;
-		
-		#if 1
-		audio-routing =
-			"Line Out", "LLOUT",
-			"Line Out", "RLOUT",
-			"Headphone Jack", "HPLOUT",
-			"Headphone Jack", "HPROUT";
-		#endif
-
-		#if 0	
-                audio-routing = 
-                        "Line Out", "LLOUT", 
-                        "Line Out", "RLOUT", 
-                        "Speaker", "SPOP", 
-                        "Speaker", "SPOM", 
-                        "Headphone Jack", "HPLOUT", 
-                        "Headphone Jack", "HPROUT", 
-                        "MIC3L", "Mic Jack", 
-                        "MIC3R", "Mic Jack", 
-                        "Mic Jack", "Mic Bias", 
-                        "LINE1L", "Line In", 
-                        "LINE1R", "Line In"; 
-		#endif
-		
+			"Line In Jack",		"LINE1L",
+			"Line In Jack",		"LINE1R";
 		mux-int-port = <1>;
 		mux-ext-port = <4>;
 	};
@@ -337,7 +243,7 @@
 		compatible = "pwm-backlight";
 		pwms = <&pwm1 0 5000000>;
 		brightness-levels = <0 4 8 16 32 64 128 255>;
-		default-brightness-level = <7>;
+		default-brightness-level = <200>;
 		status = "okay";
 	};
 
@@ -624,9 +530,7 @@
 		  //compatible = "realtek,alc5631";
 		  reg = <0x1a>;
 		  clocks = <&clks 201>;
-	};
-	#endif
-	
+	};	
 	
 	codec: tlv320aic3x@18 {
 		//compatible = "ti,tlv320aic3x";
@@ -650,7 +554,23 @@
 			0x0000 /* 5:Default */
 		>;
 	};	
-	
+	#endif
+
+	codec: tlv320aic3x@18 {
+		compatible = "ti,tlv320aic3x";
+		reg = <0x18>;
+		clocks = <&clks 201>;
+		clock-names = "clko_clk";
+		IOVDD-supply = <&reg_audio>;
+		DVDD-supply = <&reg_audio>;
+		AVDD-supply = <&reg_audio>;
+		DRVDD-supply = <&reg_audio>;
+		gpio-reset = <&gpio5 13 1>;
+		ai3x-gpio-func = <
+			0 /* AIC3X_GPIO1_FUNC_DISABLED */
+			5 /* AIC3X_GPIO2_FUNC_DIGITAL_MIC_INPUT */
+		>;	
+	};
 	//emb2230 tp
 	goodix_ts@5d {
 		compatible = "goodix,gt9xx";

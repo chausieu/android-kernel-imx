@@ -55,7 +55,7 @@ enum {
 #define DHD_SET_VAR				3
 
 /* message levels */
-#define DHD_ERROR_VAL	0x0001
+#define DHD_ERROR_VAL	0x0000
 #define DHD_TRACE_VAL	0x0002
 #define DHD_INFO_VAL	0x0004
 #define DHD_DATA_VAL	0x0008
