@@ -148,8 +148,8 @@
 			BT_PWREN = <&gpio6 10 0>;
 			BT_HOST_WAKE = <&gpio6 8 0>;
 			BT_RESET = <&gpio2 22 0>;
-			BT_CTS = <&gpio6 05 0>;	//bt_cts--gnd	
-			BT_RTS = <&gpio6 04 0>;	//bt_rts--gnd
+			//BT_CTS = <&gpio6 05 0>;	//bt_cts--gnd	
+			//BT_RTS = <&gpio6 04 0>;	//bt_rts--gnd
 			
 			//ar8035 phy reset
 			PHY_RESET = <&gpio1 29 0>;
@@ -274,6 +274,12 @@
 		reset-delay-us = <50>;
 		#reset-cells = <0>;
 	};
+
+	bt_rfkill {
+                compatible = "fsl,mxc_bt_rfkill";
+                //bt-power-gpios = <&gpio6 10 0>;
+                status ="okay";
+        };
 };
 
 &audmux {
@@ -362,22 +368,22 @@
         status = "okay";
         };
 		
-	ov564x: ov564x@3c {
-		compatible = "ovti,ov564x";
-		reg = <0x3c>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_ipu1_2>;
-		clocks = <&clks IMX6QDL_CLK_CKO>;
-		clock-names = "csi_mclk";
-		DOVDD-supply = <&vgen4_reg>; /* 1.8v */
-		AVDD-supply = <&vgen3_reg>;  /* 2.8v, on rev C board is VGEN3,
-						on rev B board is VGEN5 */
-		DVDD-supply = <&vgen2_reg>;  /* 1.5v*/
-		pwn-gpios = <&gpio1 16 1>;   /* active low: SD1_DAT0 */
-		rst-gpios = <&gpio1 17 0>;   /* active high: SD1_DAT1 */
-		csi_id = <0>;
-		mclk = <24000000>;
-		mclk_source = <0>;
+	ov564x_mipi: ov564x_mipi@3c { /* i2c2 driver */
+                compatible = "ovti,ov564x_mipi";
+                reg = <0x3c>;
+                clocks = <&clks 201>;
+                clock-names = "csi_mclk";
+                DOVDD-supply = <&vgen4_reg>; /* 1.8v */
+                AVDD-supply = <&vgen3_reg>;  /* 2.8v, rev C board is VGEN3
+                                                rev B board is VGEN5 */
+                DVDD-supply = <&vgen2_reg>;  /* 1.5v*/
+                pwn-gpios = <&gpio1 19 1>;   /* active low: SD1_CLK */
+                rst-gpios = <&gpio1 20 0>;   /* active high: SD1_DAT2 */
+                csi_id = <1>;
+                mclk = <24000000>;
+                mclk_source = <0>;
+        };
+
 	};
 };
 
@@ -722,8 +728,8 @@
 				MX6QDL_PAD_NANDF_RB0__GPIO6_IO10        0x80000000 //bt_en
 				MX6QDL_PAD_NANDF_ALE__GPIO6_IO08        0x80000000 //bt_irq
 				MX6QDL_PAD_EIM_A16__GPIO2_IO22          0x80000000 //bt_rst		
-				MX6QDL_PAD_CSI0_DAT18__GPIO6_IO04		0x80000000 //bt_rts--gnd
-				MX6QDL_PAD_CSI0_DAT19__GPIO6_IO05		0x80000000 //bt_cts--gnd	
+				//MX6QDL_PAD_CSI0_DAT18__GPIO6_IO04		0x80000000 //bt_rts--gnd
+				//MX6QDL_PAD_CSI0_DAT19__GPIO6_IO05		0x80000000 //bt_cts--gnd	
 				
 				//ar8035 phy reset
 				MX6QDL_PAD_ENET_TXD1__GPIO1_IO29 		0x80000000
@@ -927,8 +933,8 @@
 			fsl,pins = <
 				MX6QDL_PAD_CSI0_DAT14__UART5_TX_DATA    0x1b0b1
 				MX6QDL_PAD_CSI0_DAT15__UART5_RX_DATA    0x1b0b1
-				//MX6QDL_PAD_CSI0_DAT18__UART5_RTS_B      0x1b0b1
-				//MX6QDL_PAD_CSI0_DAT19__UART5_CTS_B      0x1b0b1
+				MX6QDL_PAD_CSI0_DAT18__UART5_RTS_B      0x1b0b1
+				MX6QDL_PAD_CSI0_DAT19__UART5_CTS_B      0x1b0b1
 			>;
 		};
 
@@ -1172,7 +1178,7 @@
 &uart5 {
     status = "okay";
     pinctrl-names = "default";
-	//fsl,uart-has-rtscts;
+    fsl,uart-has-rtscts;
     pinctrl-0 = <&pinctrl_uart5_1>;
 };
 

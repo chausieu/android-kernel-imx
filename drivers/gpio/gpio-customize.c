@@ -170,7 +170,7 @@ static int customize_gpio_probe(struct platform_device *pdev)
 	gpio_direction_output(g_BT_RESET, 0);
 	mdelay(500);
 	gpio_direction_output(g_BT_RESET, 1);
-
+#if 1
 	g_BT_PWREN = of_get_named_gpio(np, "BT_PWREN", 0);
 	if (!gpio_is_valid(g_BT_PWREN)){
 		printk("can not find BT_PWREN gpio pins\n");
@@ -182,7 +182,7 @@ static int customize_gpio_probe(struct platform_device *pdev)
 		return;
 	}
 	gpio_direction_output(g_BT_PWREN, 1);
-
+#endif
 	g_BT_HOST_WAKE = of_get_named_gpio(np, "BT_HOST_WAKE", 0);
 	if (!gpio_is_valid(g_BT_HOST_WAKE)){
 		printk("can not find g_BT_HOST_WAKE gpio pins\n");
@@ -195,7 +195,7 @@ static int customize_gpio_probe(struct platform_device *pdev)
 	}
 	gpio_direction_input(g_BT_HOST_WAKE);
 	
-	
+#if 0
 	//bt cts/rts
     rst = of_get_named_gpio(np, "BT_CTS", 0);
     if (!gpio_is_valid(rst)){
@@ -224,7 +224,7 @@ static int customize_gpio_probe(struct platform_device *pdev)
 
     gpio_direction_output(rst, 0);
 	//gpio_free(rst);
-	
+#endif	
 	//PHY_RESET
 	rst = of_get_named_gpio(np, "PHY_RESET", 0);
     if (!gpio_is_valid(rst)){
