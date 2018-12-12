@@ -184,12 +184,13 @@
 		hdmi-controller = <&hdmi_audio>;
 	};
 
+	//7" lvds
 	mxcfb1: fb@0 {
 		compatible = "fsl,mxc_sdc_fb";
 		disp_dev = "ldb";
-		interface_pix_fmt = "RGB666";
+		interface_pix_fmt = "RGB24";
 		mode_str ="G101EVN010";
-		default_bpp = <18>;
+		default_bpp = <24>;
 		int_clk = <0>;
 		late_init = <0>;
 		status = "disabled";
@@ -607,7 +608,7 @@
 			18 16 14 13 12 10 0F 0C 0A 08 06 
 			04 02 00 00 00 00 00 00 00 00 00 
 			00 00 00 00 00 00 00 00 3C 01];
-	};			
+	};	
 };
 
 &i2c3 {
@@ -615,14 +616,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c3>;
 	status = "okay";
-
-	egalax_ts@04 {
-		compatible = "eeti,egalax_ts";
-		reg = <0x04>;
-		interrupt-parent = <&gpio6>;
-		interrupts = <7 2>;
-		wakeup-gpios = <&gpio6 7 0>;
-	};
 
 	mag3110@0e {
 		compatible = "fsl,mag3110";
@@ -1047,20 +1040,20 @@
 
 	lvds-channel@0 {
 		fsl,data-mapping = "spwg";
-		fsl,data-width = <18>;
+		fsl,data-width = <24>;
 		primary;
 		status = "okay";
 	
 		display-timings {
 			native-mode = <&timing0>;
 			timing0: G101EVN010 {
-				clock-frequency = <60000000>;
-				hactive = <1280>;
-				vactive = <800>;
-				hback-porch = <64>;
-				hfront-porch = <80>;
-				vback-porch = <10>;
-				vfront-porch = <5>;
+				clock-frequency = <51200000>;
+				hactive = <1024>;
+				vactive = <600>;
+				hback-porch = <200>;
+				hfront-porch = <120>;
+				vback-porch = <20>;
+				vfront-porch = <15>;
 				hsync-len = <5>;
 				vsync-len = <5>;
 			};
