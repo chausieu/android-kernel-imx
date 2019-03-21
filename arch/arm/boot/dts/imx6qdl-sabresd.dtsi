@@ -151,7 +151,8 @@
 		};
 	};
 	#endif
-	
+
+	#if 0	
 	sound {
                 compatible = "fsl,imx-audio-rt5631";
                 model = "rt5631-audio";
@@ -171,7 +172,31 @@
                 hp-det-gpios = <&gpio7 8 1>;
                 mic-det-gpios = <&gpio7 11 1>;
         };
-
+	#endif
+    
+	sound-rt5640 {
+        	compatible = "fsl,imx-audio-rt5640";
+        	model = "imx6dl-rt5640";
+        	ssi-controller = <&ssi1>;
+        	audio-codec = <&codec1>;
+        	audio-routing =
+            	"Headphone Jack", "HPOL",
+            	"Headphone Jack", "HPOR",
+            	"Ext Spk", "SPOL",
+            	"Ext Spk", "SPOR";
+            	//"MICBIAS", "AMIC",
+            	//"IN3R", "MICBIAS",
+            	//"DMIC", "MICBIAS",
+            	//"DMICDAT", "DMIC";
+        	mux-int-port = <1>;
+        	mux-ext-port = <4>;
+        	//hp-det-gpios = <&gpio7 8 1>;
+        	/*+++wwj begin 20150317@add mic detect*/
+        	#ifdef CONFIG_MIC_DEC
+                	mic-det-gpios = <&gpio7 11 1>;
+        	#endif
+        	/*+++wwj end 20150317@add mic detect*/
+    	};
 
 	sound-hdmi {
 		compatible = "fsl,imx6q-audio-hdmi",
@@ -183,8 +208,9 @@
 	mxcfb1: fb@0 {
 		compatible = "fsl,mxc_sdc_fb";
 		disp_dev = "ldb";
-		interface_pix_fmt = "RGB666";
-		default_bpp = <16>;
+		interface_pix_fmt = "RGB24";
+		mode_str ="P070BAGCM1";
+		default_bpp = <24>;
 		int_clk = <0>;
 		late_init = <0>;
 		status = "disabled";
@@ -452,14 +478,22 @@
 		mclk = <24000000>;
 		mclk_source = <0>;
 	};
-
+	
+	#if 0
 	codec: rt5631@1a {
                   compatible = "realtek,rt5631";
                   reg = <0x1a>;
                   clocks = <&clks 201>;
         };
-
-
+	#endif
+    
+	//rt5640
+    	codec1: rt5640@1c {
+          	compatible = "realtek,rt5640";
+          	//compatible = "realtek,alc5640";
+          	reg = <0x1c>;
+          	clocks = <&clks 201>;
+    	};
 };
 
 &i2c3 {
@@ -468,6 +502,8 @@
 	pinctrl-0 = <&pinctrl_i2c3>;
 	status = "okay";
 
+	#if 0 
+	//remove
 	gt9xx@5d {
     		compatible = "goodix,gt9xx";
     		reg = <0x5d>;
@@ -498,7 +534,7 @@
 	 	23  24  25  26  27  28  29  FF  FF  00  00  
 	 	00  00  00  00  00  00  00  00  D6  01];
 	};
-
+	#endif
 };
 
 &iomuxc {
@@ -825,24 +861,25 @@
 
 	lvds-channel@0 {
 		fsl,data-mapping = "spwg";
-		fsl,data-width = <18>;
+		fsl,data-width = <24>;
 		primary;
 		status = "okay";
-
+        
 		display-timings {
-			native-mode = <&timing0>;
-			timing0: P070BAGCM1 {
-				clock-frequency = <71000000>;
-				hactive = <1280>;
-				vactive = <800>;
-				hback-porch = <40>;
-				hfront-porch = <40>;
-				vback-porch = <10>;
-				vfront-porch = <3>;
-				hsync-len = <10>;
-				vsync-len = <12>;
-			};
-		};
+            		native-mode = <&timing0>;
+            		timing0: P070BAGCM1 {
+                		clock-frequency = <51200000>;
+                		hactive = <1024>;
+                		vactive = <600>;
+                		hback-porch = <200>;
+               			hfront-porch = <120>;
+                		vback-porch = <15>;
+                		vfront-porch = <20>;
+                		hsync-len = <10>;
+                		vsync-len = <10>;
+            		};
+        	};
+
 	};
 
 	lvds-channel@1 {
