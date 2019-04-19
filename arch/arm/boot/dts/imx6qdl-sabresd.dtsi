@@ -345,6 +345,20 @@
 	pinctrl-0 = <&pinctrl_i2c1>;
 	status = "okay";
 	
+    //ppc4207 ilitek tp
+    ilitek@41 {
+        compatible = "tchip,ilitek";
+        reg = <0x41>;
+        interrupt-parent = <&gpio1>;
+        interrupts = <01 3>;
+        //vdd-supply = <&pm8916_l17>;
+        //vcc_i2c-supply = <&pm8916_l6>;
+        ilitek,irq-gpio = <&gpio1 01 0>;
+        ilitek,reset-gpio = <&gpio1 04 0>;
+        ilitek,vbus = "vcc_i2c";
+        ilitek,vdd = "vdd";
+        ilitek,name = "ilitek_i2c";
+    };	
 };
 
 &i2c2 {
@@ -582,6 +596,11 @@
 				//MX6QDL_PAD_SD3_RST__GPIO7_IO8    0x80000000
 				MX6QDL_PAD_GPIO_16__GPIO7_IO11   0x80000000
 				MX6QDL_PAD_GPIO_7__GPIO1_IO07    0x80000000
+				
+                //ppc4207 tp rst and irq
+                MX6QDL_PAD_GPIO_4__GPIO1_IO04   0x80000000
+                MX6QDL_PAD_GPIO_5__GPIO1_IO05   0x80000000
+                MX6QDL_PAD_GPIO_1__GPIO1_IO01   0x80000000				
 			>;
 		};
 
@@ -632,7 +651,7 @@
 		pinctrl_gpio_keys: gpio_keysgrp {
 			fsl,pins = <
 				MX6QDL_PAD_EIM_D29__GPIO3_IO29 0x80000000
-				MX6QDL_PAD_GPIO_5__GPIO1_IO05  0x80000000
+				//MX6QDL_PAD_GPIO_5__GPIO1_IO05  0x80000000
 			>;
 		};
 
@@ -665,7 +684,7 @@
 
 		pinctrl_i2c3: i2c3grp {
 			fsl,pins = <
-				MX6QDL_PAD_GPIO_5__I2C3_SCL		0x4001b8b1
+				//MX6QDL_PAD_GPIO_5__I2C3_SCL		0x4001b8b1
 				MX6QDL_PAD_GPIO_6__I2C3_SDA		0x4001b8b1
 			>;
 		};
@@ -806,13 +825,15 @@
 				//MX6QDL_PAD_SD4_DAT7__SD4_DATA7		0x17059
 			>;
 		};
+		#if 0
 		mx6_gt9xx_pins:gt9xx {
 			fsl,pins = <
-				MX6QDL_PAD_GPIO_4__GPIO1_IO04  0x80000000
+				//MX6QDL_PAD_GPIO_4__GPIO1_IO04  0x80000000
 				MX6QDL_PAD_GPIO_1__GPIO1_IO01  0x80000000
 			>;
 	
 		};
+		#endif
 	};
 };
 
