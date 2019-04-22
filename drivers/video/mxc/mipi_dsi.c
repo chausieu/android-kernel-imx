@@ -57,11 +57,20 @@
 #define	MIPI_DSI_PHY_TIMEOUT		(10)
 
 static struct mipi_dsi_match_lcd mipi_dsi_lcd_db[] = {
+#if 0
 #ifdef CONFIG_FB_MXC_TRULY_WVGA_SYNC_PANEL
 	{
 	 "TRULY-WVGA",
 	 {mipid_hx8369_get_lcd_videomode, mipid_hx8369_lcd_setup}
 	},
+#endif
+#endif
+//n070icn
+#if 0
+        {
+         "n070icn-WXGA",
+         {mipid_n070icn_get_lcd_videomode, mipid_n070icn_lcd_setup}
+        },
 #endif
 	{
 	"", {NULL, NULL}

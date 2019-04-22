@@ -100,14 +100,23 @@ struct mipi_dsi_info {
 			u8 cmd, const u32 *param, int num);
 };
 
+#if 0
 #ifdef CONFIG_FB_MXC_TRULY_WVGA_SYNC_PANEL
 void mipid_hx8369_get_lcd_videomode(struct fb_videomode **mode, int *size,
 		struct mipi_lcd_config **data);
 int mipid_hx8369_lcd_setup(struct mipi_dsi_info *);
 #endif
-
-#ifndef CONFIG_FB_MXC_TRULY_WVGA_SYNC_PANEL
-#error "Please configure MIPI LCD panel, we cannot find one!"
 #endif
+
+//n070icn
+#if 0
+void mipid_n070icn_get_lcd_videomode(struct fb_videomode **mode, int *size,
+                struct mipi_lcd_config **data);
+int mipid_n070icn_lcd_setup(struct mipi_dsi_info *);
+#endif
+
+//#ifndef CONFIG_FB_MXC_TRULY_WVGA_SYNC_PANEL
+//#error "Please configure MIPI LCD panel, we cannot find one!"
+//#endif
 
 #endif
