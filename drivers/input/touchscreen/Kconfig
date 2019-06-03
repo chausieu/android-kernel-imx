@@ -375,6 +375,13 @@ config TOUCHSCREEN_LPC32XX
 	  To compile this driver as a module, choose M here: the
 	  module will be called lpc32xx_ts.
 
+config TOUCHSCREEN_PPC4710_Ilitek
+    tristate "TOUCHSCREEN_PPC4710_Ilitek for yocto"
+    depends on I2C
+    default n
+    help
+    tristate TOUCHSCREEN_PPC4710_Ilitek
+
 config TOUCHSCREEN_MAX11801
 	tristate "MAX11801 based touchscreens"
 	depends on I2C

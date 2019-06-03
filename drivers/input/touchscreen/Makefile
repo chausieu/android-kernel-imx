@@ -80,4 +80,4 @@ obj-$(CONFIG_TOUCHSCREEN_W90X900)	+= w90p910_ts.o
 obj-$(CONFIG_TOUCHSCREEN_TPS6507X)	+= tps6507x-ts.o
 obj-$(CONFIG_TOUCHSCREEN_ZFORCE)	+= zforce_ts.o
 obj-y += gt9xx.o gt9xx_update.o goodix_tool.o
-
+obj-$(CONFIG_TOUCHSCREEN_PPC4710_Ilitek)   += ppc4710_ilitek/
