@@ -335,6 +335,7 @@
 	pinctrl-0 = <&pinctrl_i2c1>;
 	status = "okay";
 
+	#if 0
 	//yangbo test
     	ilitek@41 {
         	compatible = "tchip,ilitek";
@@ -349,7 +350,8 @@
         	ilitek,vdd = "vdd";
         	ilitek,name = "ilitek_i2c";
     	};
-
+	#endif
+	
 	mma8451@1c {
 		compatible = "fsl,mma8451";
 		reg = <0x1c>;
@@ -579,6 +581,23 @@
 			5 /* AIC3X_GPIO2_FUNC_DIGITAL_MIC_INPUT */
 		>;	
 	};
+
+        #if 1
+        //ppc4407-tp2 new 
+        ilitek@41 {
+                compatible = "tchip,ilitek";
+                reg = <0x41>;
+                interrupt-parent = <&gpio1>;
+                interrupts = <01 3>;
+                //vdd-supply = <&pm8916_l17>;
+                //vcc_i2c-supply = <&pm8916_l6>;
+                ilitek,irq-gpio = <&gpio4 27 0>;
+                ilitek,reset-gpio = <&gpio4 26 0>;
+                ilitek,vbus = "vcc_i2c";
+                ilitek,vdd = "vdd";
+                ilitek,name = "ilitek_i2c";
+        };
+        #endif
 
 	#if 0
 	//emb2230 tp
