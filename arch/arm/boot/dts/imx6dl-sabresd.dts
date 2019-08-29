@@ -50,6 +50,7 @@
         };
 };
 
+#if 0
 &epdc {
         pinctrl-names = "default";
         pinctrl-0 = <&pinctrl_epdc_0>;
@@ -58,6 +59,7 @@
         DISPLAY-supply = <&DISPLAY_reg>;
         status = "okay";
 };
+#endif
 
 &i2c3 {
         max17135@48 {
