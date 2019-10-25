@@ -132,7 +132,8 @@
 			//LCD3P3V_Npwren = <&gpio4 11 0>;
 			LCD_BL_EN = <&gpio4 17 0>;
 			VDDLCD_PWREN = <&gpio4 28 0>;
-			
+			LCD_RST = <&gpio4 26 0>;			
+		
 			//tp
 			TP_PWR_EN = <&gpio4 10 0>;
 			
@@ -167,12 +168,20 @@
 		model = "tlv320aic3x-audio";
                 cpu-dai = <&ssi1>;
 		audio-codec = <&codec>;
+		#if 0
 		audio-routing =
 			/* Headphone connected to HPLOUT, HPROUT */
 			"Headphone Jack",       "HPLOUT",
 			"Headphone Jack",       "HPROUT",
 			"Line In Jack",		"LINE1L",
 			"Line In Jack",		"LINE1R";
+		#endif
+		audio-routing =
+			"Line Out", "LLOUT",
+			"Line Out", "RLOUT",
+			"Headphone Jack", "HPLOUT",
+			"Headphone Jack", "HPROUT";
+
 		mux-int-port = <1>;
 		mux-ext-port = <4>;
 	};
@@ -569,6 +578,8 @@
 	codec: tlv320aic3x@18 {
 		compatible = "ti,tlv320aic3x";
 		reg = <0x18>;
+		ai3x-micbias-vg = <2>;
+
 		clocks = <&clks 201>;
 		clock-names = "clko_clk";
 		IOVDD-supply = <&reg_audio>;
@@ -592,7 +603,7 @@
                 //vdd-supply = <&pm8916_l17>;
                 //vcc_i2c-supply = <&pm8916_l6>;
                 ilitek,irq-gpio = <&gpio4 27 0>;
-                ilitek,reset-gpio = <&gpio4 26 0>;
+                //ilitek,reset-gpio = <&gpio4 26 0>;
                 ilitek,vbus = "vcc_i2c";
                 ilitek,vdd = "vdd";
                 ilitek,name = "ilitek_i2c";
