@@ -96,6 +96,23 @@ static int customize_gpio_probe(struct platform_device *pdev)
 
     gpio_direction_output(rst, 1);
 	gpio_free(rst);
+
+    //lcd rst
+    rst = of_get_named_gpio(np, "LCD_RST", 0);
+    if (!gpio_is_valid(rst)){
+        printk("can not find LCD_RST gpio pins\n");
+        return -1;
+    }
+    ret = gpio_request(rst, "LCD_RST");
+    if(ret){
+        printk("request gpio LCD_RST failed\n");
+        return;
+    }
+
+    gpio_direction_output(rst, 0);
+    gpio_set_value(rst, 0);
+    mdelay(100);
+    gpio_set_value(rst, 1);
 	
 	//TP_PWR_EN
     rst = of_get_named_gpio(np, "TP_PWR_EN", 0);
