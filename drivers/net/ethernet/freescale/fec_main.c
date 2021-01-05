@@ -1691,6 +1691,8 @@ static void fec_get_mac(struct net_device *ndev)
                printk("\n fec:Get mac error!! \n");
         else
                iap = g_mac_addr;
+
+	printk("fec address mac address:%02x:%02x:%02x:%02x:%02x:%02x\n",g_mac_addr[0],g_mac_addr[1],g_mac_addr[2],g_mac_addr[3],g_mac_addr[4],g_mac_addr[5]);
 	/*
 	 * 2) from device tree data
 	 */

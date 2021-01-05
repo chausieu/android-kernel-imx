@@ -2,6 +2,7 @@
 # Makefile for the Freescale network device drivers.
 #
 
+obj-y += mega48.o
 obj-$(CONFIG_FEC) += fec.o
 fec-objs :=fec_main.o fec_ptp.o
 obj-$(CONFIG_FEC_MPC52xx) += fec_mpc52xx.o
