@@ -326,7 +326,7 @@
 };
 #endif
 
-#if 0
+#if 1
 //ppc-4407
 &fec {
 	pinctrl-names = "default";
